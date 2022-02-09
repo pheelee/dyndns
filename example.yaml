@@ -1,0 +1,16 @@
+global:
+  timezone: Europe/Zurich
+  listen: 8090
+  realipheader: X-Forwarded-For
+httpreqauth:
+  username: acmeuser
+  password: acmepassword
+dnsserver:
+  bind:
+    enabled: true
+    host: localhost
+    sync: false
+    debug: false
+domains:
+  dyn.example.com:
+    credentials: 2DE70679C33C9B652F0FCCE1DCD62124020BDCB5676E113C40C969050EA60074

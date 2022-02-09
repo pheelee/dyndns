@@ -1,0 +1,48 @@
+kind: pipeline
+name: default-amd64
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: publish  
+  image: plugins/docker
+  environment:
+    GOOS: linux
+    GOARCH: amd64
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    repo: pheelee/dyndns-amd64
+    build_args_from_env:
+      - GOOS
+      - GOARCH
+
+---
+kind: pipeline
+name: default-armhf7
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+- name: publish  
+  image: plugins/docker
+  environment:
+    GOOS: linux
+    GOARCH: arm
+    GOARM: 7
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    repo: pheelee/dyndns-armhf7
+    build_args_from_env:
+      - GOOS
+      - GOARCH
+      - GOARM

@@ -1,0 +1,49 @@
+#!/usr/bin/with-contenv sh
+
+ZONE_DIR="$DATA_PATH/pri"
+DDNS_CONFIG="$DATA_PATH/dyndns.json"
+MY_PUBLIC_IP=`dig +short myip.opendns.com @resolver1.opendns.com`
+
+
+mkdir -p "$ZONE_DIR"
+touch $DATA_PATH/zones.conf
+chown named.named $DATA_PATH -R
+
+if [ ! -f /etc/bind/named.conf ]
+then
+        cp /etc/bind/named.conf.authoritative /etc/bind/named.conf
+        sed -i 's/directory "\/var\/bind";/directory "\/var\/bind\/zones";/' /etc/bind/named.conf
+        sed -i 's/listen-on { 127.0.0.1; };/listen-on { any; };/' /etc/bind/named.conf
+        echo 'include "/var/bind/zones/zones.conf";' >> /etc/bind/named.conf
+fi
+
+if [ -n "$BASE_DOMAIN" ] && [ ! -f "$ZONE_DIR/pri.$BASE_DOMAIN" ]
+then
+        echo "Creating base domain config for bind"
+
+        cat <<EOF > "$ZONE_DIR/pri.$BASE_DOMAIN"
+\$TTL 86400    ; 1 day
+@        IN SOA    ns1.$BASE_DOMAIN. zonemaster.$BASE_DOMAIN. (
+                                2020010605 ; serial
+                                7200       ; refresh (2 hours)
+                                540        ; retry (9 minutes)
+                                604800     ; expire (1 week)
+                                86400      ; minimum (1 day)
+                                )
+                        NS    ns1.$BASE_DOMAIN.
+                        A    $MY_PUBLIC_IP
+                        MX    5 mail.$BASE_DOMAIN.
+\$ORIGIN $BASE_DOMAIN.
+mail           A    $MY_PUBLIC_IP
+*            CNAME    $BASE_DOMAIN.
+ns1            A    $MY_PUBLIC_IP
+EOF
+
+	cat<<EOF >> "$DATA_PATH/zones.conf"
+zone "$BASE_DOMAIN" {
+       type master;
+       file "pri/pri.$BASE_DOMAIN";
+       allow-update { 127.0.0.1; };
+};
+EOF
+fi
